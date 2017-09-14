@@ -206,15 +206,50 @@ static BOOL MZFromSheetControllerIsViewControllerBasedStatusBarAppearance(void) 
 {
     UIInterfaceOrientation orientaion = [UIApplication sharedApplication].statusBarOrientation;
     CGPoint convertedPoint = [self convertPoint:point toInterfaceOrientation:orientaion];
-
+    
     // UIView will be "transparent" for touch events if we return NO
+    MZFormSheetController *formSheet = (MZFormSheetController *)self.rootViewController;
     if (self.isTransparentTouchEnabled) {
-        MZFormSheetController *formSheet = (MZFormSheetController *)self.rootViewController;
         if (!CGRectContainsPoint(formSheet.presentedFSViewController.view.frame, convertedPoint)){
             return NO;
         }
     }
+    else if (![formSheet.presentedFSViewController.view.layer masksToBounds] && !CGRectContainsPoint(formSheet.presentedFSViewController.view.frame, convertedPoint)) {
+        for (UIView *subview in formSheet.presentedFSViewController.view.subviews) {
+            CGRect convSubviewFrame = [[subview superview] convertRect:subview.frame toView:self];
+            if (CGRectContainsPoint(convSubviewFrame, point)) {
+                return YES;
+            }
+        }
+    }
+    
     return YES;
+}
+
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    MZFormSheetController *formSheet = (MZFormSheetController *)self.rootViewController;
+    UIInterfaceOrientation orientaion = [UIApplication sharedApplication].statusBarOrientation;
+    CGPoint convertedPoint = [self convertPoint:point toInterfaceOrientation:orientaion];
+    
+    if ([self pointInside:point withEvent:event]) {
+        for (UIView *subview in [formSheet.presentedFSViewController.view.subviews reverseObjectEnumerator]) {
+            CGPoint convertedPoint = [subview convertPoint:point fromView:self];
+            UIView *hitTestView = [subview hitTest:convertedPoint withEvent:event];
+            if (hitTestView) {
+                return hitTestView;
+            }
+        }
+        return self;
+    }
+    
+    if (![formSheet.presentedFSViewController.view.layer masksToBounds] && !CGRectContainsPoint(formSheet.presentedFSViewController.view.frame, convertedPoint)) {
+        return formSheet.presentedFSViewController.view;
+    }
+    else if (CGRectContainsPoint(formSheet.presentedFSViewController.view.frame, convertedPoint)) {
+        return formSheet.presentedFSViewController.view;
+    }
+    
+    return self;
 }
 
 @end

@@ -231,6 +231,13 @@ static BOOL MZFromSheetControllerIsViewControllerBasedStatusBarAppearance(void) 
     UIInterfaceOrientation orientaion = [UIApplication sharedApplication].statusBarOrientation;
     CGPoint convertedPoint = [self convertPoint:point toInterfaceOrientation:orientaion];
     
+    // check alert view controller and send event to there
+    if ([[formSheet presentedViewController] isKindOfClass:[UIAlertController class]]) {
+        UIView *alertView = [[formSheet presentedViewController] view];
+        CGPoint convertedPoint = [alertView convertPoint:point fromView:self];
+        return [alertView hitTest:convertedPoint withEvent:event];
+    }
+    
     if ([self pointInside:point withEvent:event]) {
         for (UIView *subview in [formSheet.presentedFSViewController.view.subviews reverseObjectEnumerator]) {
             CGPoint convertedPoint = [subview convertPoint:point fromView:self];

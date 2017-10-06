@@ -43,7 +43,7 @@ typedef NS_ENUM(NSInteger, MZFormSheetTransitionStyle) {
     MZFormSheetTransitionStyleNone,
 };
 
-@protocol MZFormSheetControllerTransition <NSObject>
+@protocol MZFormSheetControllerTransition <NSObject, CAAnimationDelegate>
 @required
 /**
  Subclasses must implement to add custom transition animation.

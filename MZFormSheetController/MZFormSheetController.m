@@ -231,11 +231,25 @@ static BOOL MZFromSheetControllerIsViewControllerBasedStatusBarAppearance(void) 
     UIInterfaceOrientation orientaion = [UIApplication sharedApplication].statusBarOrientation;
     CGPoint convertedPoint = [self convertPoint:point toInterfaceOrientation:orientaion];
     
-    // check alert view controller and send event to there
+    // when alert view controller presented inside sheet controller
     if ([[formSheet presentedViewController] isKindOfClass:[UIAlertController class]]) {
         UIView *alertView = [[formSheet presentedViewController] view];
         CGPoint convertedPoint = [alertView convertPoint:point fromView:self];
         return [alertView hitTest:convertedPoint withEvent:event];
+    }
+    // when popover presented inside of sheet controller
+    else if ([[formSheet presentedViewController] isKindOfClass:[UIViewController class]]) {
+        UIView *subViewOnFormSheet = [[formSheet presentedViewController] view];
+        CGPoint convertedPoint = [subViewOnFormSheet convertPoint:point fromView:self];
+        UIView *hitTestView = [subViewOnFormSheet hitTest:convertedPoint withEvent:event];
+        // is in the popover view
+        if (hitTestView) {
+            return [subViewOnFormSheet hitTest:convertedPoint withEvent:event];
+        }
+        
+        [[formSheet presentedViewController] dismissViewControllerAnimated:YES completion:nil];
+        // otherwise return self
+        return self;
     }
     
     if ([self pointInside:point withEvent:event]) {
